@@ -1,11 +1,9 @@
-// backend/app.js (CÓDIGO COMPLETO Y CORREGIDO)
-
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const commandController = require('./controllers/commandController');
 const postsRoutes = require("./routes/postsRoutes");
-const { executeQuery } = require('./config/db');   // ✅ FALTABA ESTE IMPORT
+const { executeQuery } = require('./config/db');
 
 const app = express();
 
@@ -44,7 +42,6 @@ app.get('/api/categorias', async (req, res) => {
     try {
         const sql = `SELECT id_categoria, nombre_categoria FROM categorias ORDER BY nombre_categoria ASC`;
         const rows = await executeQuery(sql);
-
         res.json({ categorias: rows });
     } catch (error) {
         console.error("Error en getCategorias:", error);

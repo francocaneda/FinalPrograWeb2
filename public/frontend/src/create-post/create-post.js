@@ -1,23 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
-
-// ✅ IMPORTAR LOS ESTILOS
 import './create-post.css'; 
 
-// Importación de servicios (asumiendo que ya están en src/services)
-import categoryService from '../services/category.service';
+import { useCategoryService } from '../services/categoryService';
 import postService from '../services/post.service';
-
+import { useAuth } from '../context/AuthContext'; 
 
 function CreatePost() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { getCategorias } = useCategoryService();
+    const { user } = useAuth(); // ✅ usuario logueado con uid
 
-    // Max length definition
     const MAX_TITLE_LENGTH = 100;
     const MAX_CONTENT_LENGTH = 5000;
-    
+
     const [categorias, setCategorias] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [formData, setFormData] = useState({
@@ -25,13 +23,25 @@ function CreatePost() {
         titulo: '',
         contenido: '',
     });
-    const [errors, setErrors] = useState({}); // Estado para manejar errores de validación
+    const [errors, setErrors] = useState({});
 
-    // --- Lógica (useCallback, useEffect, handleChange, onSubmit, etc.) se mantiene ---
-    // (Omitido para brevedad, asumo que ya funciona correctamente)
-    // ...
+    // --- Cargar categorías ---
+    useEffect(() => {
+        const cargarCategorias = async () => {
+            try {
+                const data = await getCategorias();
+                setCategorias(data.categorias || []);
+            } catch (error) {
+                console.error("Error al obtener categorías:", error);
+                Swal.fire('Error', 'No se pudieron cargar las categorías', 'error');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        cargarCategorias();
+    }, [getCategorias]);
 
-    // Lógica de Validación (debe actualizar el estado 'errors')
+    // --- Validación ---
     const validateField = (name, value) => {
         let error = '';
         if (name === 'id_categoria' && !value) {
@@ -43,23 +53,22 @@ function CreatePost() {
         }
         return error;
     };
-    
+
     const handleChange = (e) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: value }));
-        
-        // Validación en tiempo real al cambiar
+
         const error = validateField(id, value);
         setErrors(prev => ({ ...prev, [id]: error }));
     };
-    
+
+    // --- Enviar formulario ---
     const onSubmit = async (e) => {
-        e.preventDefault(); 
-        
+        e.preventDefault();
+
         let newErrors = {};
         let isValid = true;
-        
-        // Validación final de todos los campos
+
         for (const [key, value] of Object.entries(formData)) {
             const error = validateField(key, value);
             newErrors[key] = error;
@@ -69,43 +78,49 @@ function CreatePost() {
         setErrors(newErrors);
 
         if (!isValid) {
-            Swal.fire({
+            return Swal.fire({
                 icon: 'warning',
                 title: 'Formulario Incompleto',
                 text: 'Por favor, revisa los campos marcados.'
             });
-            return;
         }
 
-        // ... (Llamada al servicio para crear post)
-        // ...
-        
+        if (!user || !user.uid) {
+            return Swal.fire('Error', 'No se pudo identificar al usuario. Por favor inicia sesión.', 'error');
+        }
+
+        try {
+            // ✅ Usamos user.uid
+            const payload = { ...formData, id_usuario: user.uid };
+            await postService.createPost(payload);
+            Swal.fire('Éxito', 'Post creado correctamente', 'success');
+            navigate('/foro');
+        } catch (error) {
+            console.error("Error al crear post:", error);
+            Swal.fire('Error', 'No se pudo crear el post', 'error');
+        }
     };
-    
+
     const onCancel = () => {
-        // ... (lógica de cancelación)
+        navigate(-1); // vuelve a la página anterior
     };
-    
-    
-    // --- Renderizado JSX (con CLASES CSS adaptadas) ---
+
     return (
-        <div className="container"> 
+        <div className="container">
             <div className="create-post-container">
-                
-                {/* 1. Header */}
+                {/* Header */}
                 <header className="create-post-header">
                     <i className="bi bi-pencil-square create-post-icon"></i>
                     <h1 className="create-post-title">Crear Nueva Publicación</h1>
                     <p className="create-post-subtitle">
-                        Comparte tus conocimientos o inicia una discusión en el foro. 
+                        Comparte tus conocimientos o inicia una discusión en el foro.
                         Asegúrate de elegir la categoría correcta.
                     </p>
                 </header>
-                
-                {/* 2. Formulario */}
+
+                {/* Formulario */}
                 <form className="create-post-form" onSubmit={onSubmit}>
-                    
-                    {/* Campo 1: Categoría */}
+                    {/* Categoría */}
                     <div className={`form-group ${errors.id_categoria ? 'error' : formData.id_categoria ? 'success' : ''}`}>
                         <label htmlFor="id_categoria" className="form-label">
                             <i className="bi bi-bookmark-fill form-label-icon"></i>
@@ -133,7 +148,7 @@ function CreatePost() {
                         </div>}
                     </div>
 
-                    {/* Campo 2: Título */}
+                    {/* Título */}
                     <div className={`form-group ${errors.titulo ? 'error' : formData.titulo ? 'success' : ''}`}>
                         <label htmlFor="titulo" className="form-label">
                             <i className="bi bi-type-h1 form-label-icon"></i>
@@ -151,14 +166,12 @@ function CreatePost() {
                         {errors.titulo && <div className="error-message">
                             <i className="bi bi-x-circle-fill"></i> {errors.titulo}
                         </div>}
-                        
-                        {/* Contador de Caracteres para el Título */}
                         <span className={`character-counter ${formData.titulo.length > MAX_TITLE_LENGTH - 10 ? 'warning' : ''} ${formData.titulo.length === MAX_TITLE_LENGTH ? 'danger' : ''}`}>
                             {formData.titulo.length} / {MAX_TITLE_LENGTH}
                         </span>
                     </div>
 
-                    {/* Campo 3: Contenido */}
+                    {/* Contenido */}
                     <div className={`form-group ${errors.contenido ? 'error' : formData.contenido ? 'success' : ''}`}>
                         <label htmlFor="contenido" className="form-label">
                             <i className="bi bi-body-text form-label-icon"></i>
@@ -171,18 +184,16 @@ function CreatePost() {
                             value={formData.contenido}
                             onChange={handleChange}
                             maxLength={MAX_CONTENT_LENGTH}
-                        ></textarea>
+                        />
                         {errors.contenido && <div className="error-message">
                             <i className="bi bi-x-circle-fill"></i> {errors.contenido}
                         </div>}
-
-                        {/* Contador de Caracteres para el Contenido */}
                         <span className={`character-counter ${formData.contenido.length > MAX_CONTENT_LENGTH - 200 ? 'warning' : ''} ${formData.contenido.length === MAX_CONTENT_LENGTH ? 'danger' : ''}`}>
                             {formData.contenido.length} / {MAX_CONTENT_LENGTH}
                         </span>
                     </div>
-                    
-                    {/* 3. Acciones */}
+
+                    {/* Botones */}
                     <div className="form-actions">
                         <button type="button" className="btn btn-secondary" onClick={onCancel}>
                             <i className="bi bi-x-lg btn-icon"></i>
@@ -193,7 +204,6 @@ function CreatePost() {
                             Publicar Ahora
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>
