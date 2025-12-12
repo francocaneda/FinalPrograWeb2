@@ -801,3 +801,218 @@
             left: 50%;
             transform: translateX(-50%);
         }
+
+add.comment.form{
+    margin-bottom: 30px;
+}
+
+/* ============================= */
+/*       SECCIÓN DE COMENTARIOS */
+/* ============================= */
+
+.comentarios-section {
+  margin-top: 2rem;
+  background: #1e1f25;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.35);
+}
+
+.comentarios-section h3 {
+  color: #ffffff;
+  margin-bottom: 1.2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-left: 4px solid #4f9cff;
+  padding-left: 10px;
+}
+
+/* Crear comentario */
+.crear-comentario {
+  background: #434654;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.crear-comentario textarea {
+  background: #434654;
+  border: 1px solid #333;
+  padding: 0.8rem;
+  border-radius: 8px;
+  color: #ffffff;
+  resize: none;
+  min-height: 80px;
+  font-size: 0.95rem;
+  transition: border 0.2s;
+}
+
+.crear-comentario textarea:focus {
+  border-color: #4b89da;
+  outline: none;
+}
+
+.crear-comentario .btn-primary {
+  background: #4987d7;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #6091c8 !important;
+}
+
+/* Lista de comentarios */
+.comentarios-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Tarjeta de comentario */
+.comentario-card {
+  background: #2a2b33;
+  padding: 1rem;
+  border-radius: 10px;
+  border-left: 4px solid #4f9cff;
+  box-shadow: 0 0 6px rgba(0,0,0,0.25);
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.comentario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  color: #ddd;
+  font-size: 0.9rem;
+}
+
+.comentario-header strong {
+  color: #fff;
+}
+
+.comentario-body {
+  color: #cccccc;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Botón eliminar comentario */
+.btn-sm.btn-danger {
+  background: #ff4d4d !important;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.btn-sm.btn-danger:hover {
+  background: #ff6b6b !important;
+}
+
+/* ======= TARJETA DE CADA COMENTARIO ======= */
+.comentario-card {
+  background: #3e363622;
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+}
+
+/* ======= HEADER: USUARIO + FECHA + ELIMINAR ======= */
+.comentario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.comentario-header small {
+  color: #777;
+}
+
+.comentario-header .btn-danger {
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+/* ======= CUERPO DEL COMENTARIO ======= */
+.comentario-body {
+  font-size: 15px;
+  color: #444;
+  padding-left: 2px;
+  margin-bottom: 10px;
+}
+
+/* ======= BOTÓN RESPONDER (chiquito y prolijo) ======= */
+.comentario-card .btn-secondary {
+  padding: 3px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: #e2e2e2;
+  color: #333;
+  border: none;
+}
+
+.comentario-card .btn-secondary:hover {
+  background: #d0d0d0;
+}
+
+
+
+
+/* ======= FORMULARIO PARA RESPONDER ======= */
+.crear-respuesta {
+  margin-top: 12px;
+  padding: 10px;
+  border-left: 3px solid #d9d9d9;
+  margin-left: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crear-respuesta textarea {
+  min-height: 70px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  resize: vertical;
+}
+
+/* Botón enviar (pequeño) */
+.crear-respuesta .btn-primary {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+/* Botón cancelar */
+.crear-respuesta .btn-light {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+/* ======= SANGRÍA DE RESPUESTAS (hijos) ======= */
+.comentario-card .comentario-card {
+  margin-top: 10px;
+  border-left: 3px solid #e2e2e2;
+  padding-left: 12px;
+}

@@ -4,7 +4,8 @@ const authRoutes = require('./routes/authRoutes');
 const commandController = require('./controllers/commandController');
 const postsRoutes = require("./routes/postsRoutes");
 const { executeQuery } = require('./config/db');
-const usuariosRoutes = require('./routes/usuariosRoutes'); // <--- NUEVO
+const usuariosRoutes = require('./routes/usuariosRoutes'); 
+const comentarioRoutes = require('./routes/comentarios.routes');
 const app = express();
 
 // CONFIGURACIÓN DE CORS
@@ -37,6 +38,9 @@ app.use('/api/usuarios', usuariosRoutes); // <--- NUEVO
 // 4️⃣ Categorías y otros comandos vía ?comando=
 app.get('/api', commandController.handleCommand);
 app.post('/api', commandController.handleCommand);
+
+// Comentarios
+app.use('/api/comentarios', comentarioRoutes);
 
 // 5️⃣ ENDPOINT REAL DE CATEGORÍAS
 app.get('/api/categorias', async (req, res) => {
