@@ -1,23 +1,23 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Carousel } from "bootstrap";
+import axios from "axios";
 import "./index-foro.css";
 
-export default function IndexForo({
-  nombre = "Usuario",
-  totalUsuarios = 0,
-  totalPosts = 0,
-  totalComentarios = 0,
-  miembrosAntiguos = [],
-  estaLogueado = true,
-}) {
+export default function IndexForo({ estaLogueado = true }) {
   const carouselRef = useRef(null);
 
+  // Estados dinámicos
+  const [nombre, setNombre] = useState("Usuario");
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [totalComentarios, setTotalComentarios] = useState(0);
+
+  // Inicializar carrusel
   useEffect(() => {
     if (!carouselRef.current) return;
-    // Inicializa (o reutiliza) la instancia del carrusel
     const instance = Carousel.getOrCreateInstance(carouselRef.current, {
-      interval: 5000,  // auto-slide cada 5s
-      ride: false,     // lo manejamos por JS
+      interval: 5000,
+      ride: false,
       pause: false,
       wrap: true,
       touch: true,
@@ -25,6 +25,46 @@ export default function IndexForo({
     });
     return () => instance.dispose();
   }, []);
+
+  // Traer datos dinámicos desde el backend
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+    // 1️⃣ Nombre del usuario
+    if (estaLogueado) {
+      axios
+        .get("http://localhost:8012/api/perfil", config)
+        .then((res) => {
+          if (res.data?.nombre_completo) setNombre(res.data.nombre_completo);
+        })
+        .catch(() => setNombre("Usuario"));
+    }
+
+    // 2️⃣ Total de usuarios
+    axios
+      .get("http://localhost:8012/api/usuarios/count")
+      .then((res) => setTotalUsuarios(res.data.total || 0))
+      .catch(() => setTotalUsuarios(0));
+
+    // 3️⃣ Total de posts e interacciones
+    axios
+      .get("http://localhost:8012/api/posts")
+      .then((res) => {
+        const posts = res.data || [];
+        setTotalPosts(posts.length);
+
+        let totalComs = 0;
+        posts.forEach((p) => {
+          if (p.comentarios) totalComs += p.comentarios.length;
+        });
+        setTotalComentarios(totalComs);
+      })
+      .catch(() => {
+        setTotalPosts(0);
+        setTotalComentarios(0);
+      });
+  }, [estaLogueado]);
 
   return (
     <div className="foro-scope">
@@ -37,7 +77,7 @@ export default function IndexForo({
           data-bs-touch="true"
           data-bs-interval="5000"
         >
-          {/* Indicadores (Bootstrap 5) */}
+          {/* Indicadores */}
           <div className="carousel-indicators">
             <button
               type="button"
@@ -153,23 +193,6 @@ export default function IndexForo({
             <span className="visually-hidden">Siguiente</span>
           </button>
         </div>
-        {/* Fin Carrusel */}
-
-        {/* Miembros más antiguos */}
-        {estaLogueado && miembrosAntiguos.length > 0 && (
-          <div className="section" id="miembros-antiguos">
-            <h2 className="section-title">👴 Miembros más antiguos</h2>
-            <div className="oldest-members-grid">
-              {miembrosAntiguos.map((m, idx) => (
-                <div className="member-card" key={idx}>
-                  <div className="member-avatar">👤</div>
-                  <h4 className="member-name">{m.nombre}</h4>
-                  <p className="member-info">Miembro desde: {m.fecha}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Sección Características */}
         <div className="section">
@@ -204,9 +227,6 @@ export default function IndexForo({
           </div>
         </div>
       </div>
-
-      {/* Botón Admin (si lo necesitas)
-      <a className="botonAdmin" href="/admin">Ir al Admin</a> */}
     </div>
   );
 }

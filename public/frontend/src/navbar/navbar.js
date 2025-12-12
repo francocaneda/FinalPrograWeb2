@@ -422,30 +422,19 @@ export default function Navbar({
             {/* Menú de usuario */}
 
             <div className="user-dropdown dropdown" ref={userMenuRef}>
-
-              <a
-
+              <button
                 className="user-trigger"
-
-                href="#"
-
-                aria-expanded={showUserMenu} // ⬅️ Usamos el estado
-                onClick={toggleUserMenu} // ⬅️ Usamos la función 
-
+                type="button"
+                aria-expanded={showUserMenu}
+                onClick={toggleUserMenu}
               >
-
-                <img src={avatarUrl} alt="User Avatar" className="user-avatar" />
-
+                <i className="bi bi-person-circle user-avatar-icon" style={{ fontSize: "1.8rem" }} />
                 <div className="user-info d-none d-md-block">
-
                   <div className="user-name">{userName}</div>
                   <div className="user-role">{role}</div>
-
                 </div>
-
                 <i className="bi bi-chevron-down" />
-
-              </a>
+              </button>
 
 
 

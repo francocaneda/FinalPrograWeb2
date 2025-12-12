@@ -4,7 +4,7 @@ const authRoutes = require('./routes/authRoutes');
 const commandController = require('./controllers/commandController');
 const postsRoutes = require("./routes/postsRoutes");
 const { executeQuery } = require('./config/db');
-
+const usuariosRoutes = require('./routes/usuariosRoutes'); // <--- NUEVO
 const app = express();
 
 // CONFIGURACIÓN DE CORS
@@ -25,19 +25,20 @@ app.use(express.urlencoded({ extended: true }));
 // RUTAS
 // --------------------------------------
 
-// 1. Rutas de autenticación (login/perfil)
+// 1️⃣ Rutas de autenticación (login/perfil)
 app.use('/api', authRoutes);
 
-// 2. Rutas de POSTS (CRUD real)
+// 2️⃣ Rutas de POSTS (CRUD)
 app.use('/api/posts', postsRoutes);
 
-// 3. Categorías y otros comandos vía ?comando=
+// 3️⃣ Rutas de USUARIOS
+app.use('/api/usuarios', usuariosRoutes); // <--- NUEVO
+
+// 4️⃣ Categorías y otros comandos vía ?comando=
 app.get('/api', commandController.handleCommand);
 app.post('/api', commandController.handleCommand);
 
-// --------------------------------------
-// ENDPOINT REAL DE CATEGORÍAS
-// --------------------------------------
+// 5️⃣ ENDPOINT REAL DE CATEGORÍAS
 app.get('/api/categorias', async (req, res) => {
     try {
         const sql = `SELECT id_categoria, nombre_categoria FROM categorias ORDER BY nombre_categoria ASC`;
@@ -48,6 +49,7 @@ app.get('/api/categorias', async (req, res) => {
         res.status(500).json({ mensaje: "Error al obtener categorías." });
     }
 });
+
 
 // --------------------------------------
 // MANEJO DE ERRORES
