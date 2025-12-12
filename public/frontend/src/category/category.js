@@ -15,37 +15,74 @@ function ForumCategories() {
     const { getCategorias, crearCategoria, eliminarCategoria } = useCategoryService();
 
     const [categorias, setCategorias] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+       const [isLoading, setIsLoading] = useState(true);
     const [nuevoNombreCategoria, setNuevoNombreCategoria] = useState('');
     const [mensajeExito, setMensajeExito] = useState('');
     const [mostrarMensaje, setMostrarMensaje] = useState(false);
 
-    // Cargar categorías con cantidad de posts
+    // Cargar categorías con cantidad de posts y comentarios
     const cargarCategorias = useCallback(async () => {
         setIsLoading(true);
         try {
             const resp = await getCategorias(); 
             const cats = resp.categorias || [];
 
-            // Para cada categoría, contar posts
-            const categoriasConPosts = await Promise.all(
+            const categoriasConDatos = await Promise.all(
                 cats.map(async (cat) => {
+                    // -----------------------------
+                    // 1) Contar POSTS por categoría
+                    // -----------------------------
+                    let cantidadPosts = 0;
+                    let postsArray = [];
+
                     try {
                         const postsResp = await apiClient.get(`/api/posts/categoria/${cat.id_categoria}`);
-                        const cantidadPosts = Array.isArray(postsResp.data) ? postsResp.data.length : 0;
-                        return { ...cat, cantidadPosts };
+                        postsArray = Array.isArray(postsResp.data) ? postsResp.data : [];
+                        cantidadPosts = postsArray.length;
                     } catch (err) {
-                        // Si la categoría no tiene posts, asignamos 0
                         if (err.response && err.response.status === 404) {
-                            return { ...cat, cantidadPosts: 0 };
+                            cantidadPosts = 0;
+                        } else {
+                            console.error("Error contando posts:", err);
                         }
-                        console.error('Error al contar posts:', err);
-                        return { ...cat, cantidadPosts: 0 };
                     }
+
+                    // -----------------------------------------------
+                    // 2) Contar COMENTARIOS totales de todos los posts
+                    // -----------------------------------------------
+                    let cantidadComentarios = 0;
+
+                    try {
+                        const comentariosPromises = postsArray.map(async (post) => {
+                            try {
+                                const comResp = await apiClient.get(`/api/comentarios/post/${post.id_post}`);
+                                if (Array.isArray(comResp.data)) {
+                                    return comResp.data.length;
+                                }
+                                return 0;
+                            } catch {
+                                return 0;
+                            }
+                        });
+
+                        const comentariosPorPost = await Promise.all(comentariosPromises);
+                        cantidadComentarios = comentariosPorPost.reduce((a, b) => a + b, 0);
+
+                    } catch (err) {
+                        console.error("Error contando comentarios:", err);
+                        cantidadComentarios = 0;
+                    }
+
+                    return { 
+                        ...cat, 
+                        cantidadPosts,
+                        cantidadComentarios 
+                    };
                 })
             );
 
-            setCategorias(categoriasConPosts);
+            setCategorias(categoriasConDatos);
+
         } catch (err) {
             console.error('Error al cargar categorías', err);
         } finally {
@@ -161,9 +198,10 @@ function ForumCategories() {
                                     <span className="category-stat-icon">📝</span>
                                     <span>Posts: {categoria.cantidadPosts || 0}</span> 
                                 </div>
+
                                 <div className="category-last-post d-flex align-items-center gap-1">
                                     <span className="category-last-post-icon">💬</span>
-                                    <span>Comentarios: 0</span> 
+                                    <span>Comentarios: {categoria.cantidadComentarios || 0}</span> 
                                 </div>
                             </div>
 
@@ -174,7 +212,7 @@ function ForumCategories() {
                                             e.stopPropagation();
                                             eliminarCategoriaHandler(categoria.id_categoria); 
                                         }}
-                                        className="btn btn-danger btn-sm"
+                                        className="btn btn-danger btn-sm btn-eliminar-cat"
                                         title="Eliminar categoría"
                                     >
                                         🗑️ Eliminar
