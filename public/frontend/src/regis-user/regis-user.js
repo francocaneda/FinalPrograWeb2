@@ -1,6 +1,10 @@
 // src/regis-user/regis-user.js
 import { useMemo, useState } from "react";
 import "./regis-user.css";
+import userService from '../services/userService';
+import { useNavigate } from 'react-router-dom';
+
+
 
 export default function RegisUser() {
   // Campos
@@ -20,6 +24,8 @@ export default function RegisUser() {
   // Estado de interacción
   const [touched, setTouched] = useState({}); // {campo: true}
   const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
+
 
   // Validaciones
   const errors = useMemo(() => {
@@ -61,28 +67,47 @@ export default function RegisUser() {
     setPreview(URL.createObjectURL(f));
   }
 
-  // Submit
-  async function submit(e) {
-    e.preventDefault();
-    setSubmitting(true);
-    // marco todos como tocados para mostrar errores faltantes
-    setTouched({
-      userNameWeb: true,
-      email: true,
-      nombre: true,
-      apellido: true,
-      clave: true,
-      reclave: true,
-      fechaNacimiento: true,
-      bio: true,
+async function submit(e) {
+  e.preventDefault();
+  setSubmitting(true);
+
+  // marcar touched como ya hacés
+  setTouched({
+    userNameWeb: true,
+    email: true,
+    nombre: true,
+    apellido: true,
+    clave: true,
+    reclave: true,
+    fechaNacimiento: true,
+    bio: true,
+  });
+
+  if (!isValid) {
+    setSubmitting(false);
+    return;
+  }
+
+  try {
+    await userService.register({
+      user_nameweb: userNameWeb,
+      email,
+      clave,
+      nombre_completo: `${nombre} ${apellido}`.trim(),
+      fecha_nacimiento: fechaNacimiento || null,
+      bio: bio || ''
     });
 
-    if (!isValid) return;
-
-    // TODO: enviar al backend
-    alert("Registro OK (demo).");
+    alert('✅ Usuario registrado. Ahora podés iniciar sesión.');
+    navigate("/")
+  } catch (err) {
+    const msg = err?.response?.data?.message || 'Error registrando usuario';
+    alert(msg);
+  } finally {
     setSubmitting(false);
   }
+}
+
 
   return (
     <div className="regis-wrapper">

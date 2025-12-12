@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { executeQuery } = require('../config/db');
+const userController = require('../controllers/userController');
 
 // ---------------------------------------------------
 // GET - TOTAL DE USUARIOS
@@ -32,5 +33,7 @@ router.get('/', async (req, res) => {
         res.status(500).json({ message: 'Error obteniendo usuarios.' });
     }
 });
+
+router.post('/', userController.createUser); 
 
 module.exports = router;

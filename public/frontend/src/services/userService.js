@@ -11,6 +11,12 @@ const userService = {
       return 0;
     }
   },
+
+  register: async (payload) => {
+    // POST http://localhost:8012/api/user
+    const res = await apiClient.post('/api/usuarios', payload);
+    return res.data;
+  },
 };
 
 export default userService;
