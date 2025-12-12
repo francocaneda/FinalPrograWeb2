@@ -920,7 +920,7 @@ add.comment.form{
 }
 
 .btn-sm.btn-danger:hover {
-  background: #ff6b6b !important;
+  background: #ff6b6b !important; 
 }
 
 /* ======= TARJETA DE CADA COMENTARIO ======= */
@@ -955,7 +955,7 @@ add.comment.form{
 /* ======= CUERPO DEL COMENTARIO ======= */
 .comentario-body {
   font-size: 15px;
-  color: #444;
+  color: #6a92d5;
   padding-left: 2px;
   margin-bottom: 10px;
 }
@@ -1015,4 +1015,26 @@ add.comment.form{
   margin-top: 10px;
   border-left: 3px solid #e2e2e2;
   padding-left: 12px;
+}
+
+/* Animación de fade-out al eliminar */
+.fade-out {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.35s ease;
+}
+/* Fade IN */
+.fade-in {
+  opacity: 0;
+  animation: fadeInAnim 0.35s forwards ease-out;
+}
+
+@keyframes fadeInAnim {
+  to { opacity: 1; }
+}
+
+/* Fade OUT */
+.fade-out {
+  opacity: 0 !important;
+  transition: opacity 0.35s ease-out;
 }

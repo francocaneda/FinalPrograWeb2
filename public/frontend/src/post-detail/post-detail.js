@@ -20,6 +20,12 @@ function PostDetail() {
   const [respuestaA, setRespuestaA] = useState(null);
   const [textoRespuesta, setTextoRespuesta] = useState('');
 
+  // ID del comentario que está eliminándose (para animación)
+  const [animandoEliminacion, setAnimandoEliminacion] = useState(null);
+
+  // ID del comentario que está entrando con fade-in
+  const [animandoCreacion, setAnimandoCreacion] = useState(null);
+
   useEffect(() => {
     const cargarPost = async () => {
       try {
@@ -48,7 +54,7 @@ function PostDetail() {
   }, [id_post]);
 
   // ============================================
-  // 🔥 FUNCION CLAVE: ARMAR COMENTARIOS ANIDADOS
+  // 🔥 ARMAR COMENTARIOS ANIDADOS
   // ============================================
   const buildCommentTree = (lista) => {
     const mapa = {};
@@ -114,47 +120,70 @@ function PostDetail() {
     return `Hace ${dias} día${dias > 1 ? 's' : ''}`;
   };
 
+  // ============================================
+  // 🟦 CREAR COMENTARIO (con fade-in)
+  // ============================================
   const handleCrearComentario = async () => {
     if (!nuevoComentario.trim()) return;
 
     try {
-      await comentarioService.crearComentario(id_post, nuevoComentario);
+      const creado = await comentarioService.crearComentario(id_post, nuevoComentario);
+      
+      setAnimandoCreacion(creado.id_comentario);  
       setNuevoComentario('');
 
       const data = await comentarioService.getComentarios(Number(id_post));
       setComentarios(buildCommentTree(data));
+
+      setTimeout(() => setAnimandoCreacion(null), 300);
     } catch {
       Swal.fire('Error', 'No se pudo crear el comentario', 'error');
     }
   };
 
+  // ============================================
+  // 🟦 RESPONDER COMENTARIO (con fade-in)
+  // ============================================
   const handleResponderComentario = async (id_padre) => {
     if (!textoRespuesta.trim()) return;
 
     try {
-      await comentarioService.crearComentario(id_post, textoRespuesta, id_padre);
+      const creado = await comentarioService.crearComentario(id_post, textoRespuesta, id_padre);
 
+      setAnimandoCreacion(creado.id_comentario);
       setTextoRespuesta('');
       setRespuestaA(null);
 
       const data = await comentarioService.getComentarios(Number(id_post));
       setComentarios(buildCommentTree(data));
+
+      setTimeout(() => setAnimandoCreacion(null), 300);
     } catch {
       Swal.fire('Error', 'No se pudo responder el comentario', 'error');
     }
   };
 
+  // ============================================
+  // ❌ ELIMINAR COMENTARIO (sin sweetalert)
+  // ============================================
   const handleEliminarComentario = async (id_comentario, id_usuario) => {
     if (user.uid !== id_usuario && !user.isAdmin) return;
 
-    try {
-      await comentarioService.eliminarComentario(id_comentario);
+    // activar fade-out
+    setAnimandoEliminacion(id_comentario);
 
-      const data = await comentarioService.getComentarios(Number(id_post));
-      setComentarios(buildCommentTree(data));
-    } catch {
-      Swal.fire('Error', 'No se pudo eliminar el comentario', 'error');
-    }
+    setTimeout(async () => {
+      try {
+        await comentarioService.eliminarComentario(id_comentario);
+
+        const data = await comentarioService.getComentarios(Number(id_post));
+        setComentarios(buildCommentTree(data));
+      } catch {
+        Swal.fire('Error', 'No se pudo eliminar el comentario', 'error');
+      } finally {
+        setAnimandoEliminacion(null);
+      }
+    }, 350);
   };
 
   if (loading) return <div>Cargando post...</div>;
@@ -164,7 +193,15 @@ function PostDetail() {
   // 🔥 FUNCIÓN RECURSIVA PARA RENDERIZAR
   // ========================================
   const renderComentario = (c, nivel = 0) => (
-    <div key={c.id_comentario} className="comentario-card" style={{ marginLeft: nivel * 25 }}>
+    <div
+      key={c.id_comentario}
+      className={`
+        comentario-card
+        ${animandoEliminacion === c.id_comentario ? "fade-out" : ""}
+        ${animandoCreacion === c.id_comentario ? "fade-in" : ""}
+      `}
+      style={{ marginLeft: nivel * 25 }}
+    >
       <div className="comentario-header">
         <strong>{c.nombre_completo}</strong> – <small>{formatFechaRelativa(c.fecha_comentario)}</small>
 
@@ -190,7 +227,7 @@ function PostDetail() {
       )}
 
       {respuestaA === c.id_comentario && (
-        <div className="crear-respuesta">
+        <div className={`crear-respuesta fade-in`}>
           <textarea
             value={textoRespuesta}
             onChange={(e) => setTextoRespuesta(e.target.value)}
@@ -208,7 +245,6 @@ function PostDetail() {
         </div>
       )}
 
-      {/* Render recursivo */}
       {c.respuestas?.map(r => renderComentario(r, nivel + 1))}
     </div>
   );
@@ -216,7 +252,7 @@ function PostDetail() {
   return (
     <div className="post-detail-container">
 
-      {/* Post arriba */}
+      {/* Post */}
       <div className="post-detail-card">
         <h1 className="post-detail-title">{post.titulo}</h1>
 
