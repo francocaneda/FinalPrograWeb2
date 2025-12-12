@@ -7,52 +7,66 @@ import './category.css';
 
 import { useAuth } from '../context/AuthContext'; 
 import { useCategoryService } from '../services/categoryService'; 
+import apiClient from '../services/apiClient'; // Para contar posts
 
-/**
- * Componente principal para mostrar y gestionar las categorías del foro.
- */
 function ForumCategories() {
     const navigate = useNavigate();
-    
-    // Las funciones del servicio son estables gracias a useMemo
     const { isAuthenticated, isAdmin } = useAuth(); 
     const { getCategorias, crearCategoria, eliminarCategoria } = useCategoryService();
 
-    // Estado del componente
     const [categorias, setCategorias] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [nuevoNombreCategoria, setNuevoNombreCategoria] = useState('');
     const [mensajeExito, setMensajeExito] = useState('');
     const [mostrarMensaje, setMostrarMensaje] = useState(false);
 
-    // Función estable para cargar categorías
+    // Cargar categorías con cantidad de posts
     const cargarCategorias = useCallback(async () => {
-        setIsLoading(true); 
+        setIsLoading(true);
         try {
             const resp = await getCategorias(); 
-            setCategorias(resp.categorias || []); 
+            const cats = resp.categorias || [];
+
+            // Para cada categoría, contar posts
+            const categoriasConPosts = await Promise.all(
+                cats.map(async (cat) => {
+                    try {
+                        const postsResp = await apiClient.get(`/api/posts/categoria/${cat.id_categoria}`);
+                        const cantidadPosts = Array.isArray(postsResp.data) ? postsResp.data.length : 0;
+                        return { ...cat, cantidadPosts };
+                    } catch (err) {
+                        // Si la categoría no tiene posts, asignamos 0
+                        if (err.response && err.response.status === 404) {
+                            return { ...cat, cantidadPosts: 0 };
+                        }
+                        console.error('Error al contar posts:', err);
+                        return { ...cat, cantidadPosts: 0 };
+                    }
+                })
+            );
+
+            setCategorias(categoriasConPosts);
         } catch (err) {
             console.error('Error al cargar categorías', err);
         } finally {
-            setIsLoading(false); 
+            setIsLoading(false);
         }
-    }, [getCategorias]); 
+    }, [getCategorias]);
 
-    // Cargar categorías cuando haya autenticación
     useEffect(() => {
         if (isAuthenticated) {
             cargarCategorias(); 
         } else {
-            setIsLoading(false); 
+            setIsLoading(false);
         }
-    }, [isAuthenticated, cargarCategorias]); 
+    }, [isAuthenticated, cargarCategorias]);
 
     // Crear categoría
     const crearCategoriaHandler = async () => {
         if (!nuevoNombreCategoria.trim()) return;
-        
+
         const nombreACrear = nuevoNombreCategoria.trim();
-        setNuevoNombreCategoria(''); 
+        setNuevoNombreCategoria('');
 
         try {
             await crearCategoria({ nombre_categoria: nombreACrear }); 
@@ -60,20 +74,16 @@ function ForumCategories() {
 
             setMensajeExito('¡Categoría creada exitosamente!');
             setMostrarMensaje(true);
-
-            setTimeout(() => {
-                setMostrarMensaje(false);
-            }, 3000);
+            setTimeout(() => setMostrarMensaje(false), 3000);
         } catch (err) {
             console.error(err);
             Swal.fire('Error', 'No se pudo crear la categoría. Intenta nuevamente.', 'error');
         }
     };
 
-    // 👉 Navegar a post-list
+    // Navegar a post-list
     const cargarPosts = (categoria) => {
-        const id = categoria.id_categoria;
-        navigate(`/main-layout/post-list/${id}`);
+        navigate(`/main-layout/post-list/${categoria.id_categoria}`);
     };
 
     // Eliminar categoría
@@ -100,12 +110,8 @@ function ForumCategories() {
         });
     };
 
-    // ----------------------------------------------------------------
-    // Renderizado
-    // ----------------------------------------------------------------
     return (
         <div className="categories-container">
-
             <div className="categories-header">
                 <h1 className="categories-title">Categorías del Foro</h1>
                 <p className="categories-subtitle">
@@ -141,7 +147,6 @@ function ForumCategories() {
                             className="category-card" 
                             onClick={() => cargarPosts(categoria)} 
                         >
-                            
                             <div className="category-header d-flex align-items-center gap-2">
                                 <div className="category-icon">📂</div>
                                 <h3 className="category-title">{categoria.nombre_categoria}</h3>
@@ -154,7 +159,7 @@ function ForumCategories() {
                             <div className="category-stats d-flex gap-3">
                                 <div className="category-stat d-flex align-items-center gap-1">
                                     <span className="category-stat-icon">📝</span>
-                                    <span>Posts: 0</span> 
+                                    <span>Posts: {categoria.cantidadPosts || 0}</span> 
                                 </div>
                                 <div className="category-last-post d-flex align-items-center gap-1">
                                     <span className="category-last-post-icon">💬</span>

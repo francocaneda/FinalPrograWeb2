@@ -9,19 +9,20 @@ import ForumCategories from "./category/category";
 import CreatePost from './create-post/create-post';
 import Profile from "./profile/profile";
 
-// 🚀 IMPORTAR POST LIST
+// 🚀 IMPORTAR POST LIST Y POST DETAIL
 import PostList from "./post-list/post-list";
+import PostDetail from "./post-detail/post-detail";
 
 export default function AppRoutes() {
   return (
     <Routes>
 
-      {/* PUBLICAS */}
+      {/* RUTAS PÚBLICAS */}
       <Route path="/" element={<Login />} />
       <Route path="/registrarte" element={<RegisUser />} />
       <Route path="/password-recup" element={<PasswordRecup />} />
 
-      {/* PROTEGIDAS */}
+      {/* RUTAS PROTEGIDAS */}
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
 
@@ -37,6 +38,9 @@ export default function AppRoutes() {
 
           {/* LISTA DE POSTS POR CATEGORÍA */}
           <Route path="/main-layout/post-list/:id" element={<PostList />} />
+
+          {/* DETALLE DE POST */}
+          <Route path="/main-layout/post-detail/:id_post" element={<PostDetail />} />
 
           {/* CREAR POST */}
           <Route path="/main-layout/create-post" element={<CreatePost />} />

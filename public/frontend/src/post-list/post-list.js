@@ -143,7 +143,8 @@ export default function PostList() {
               {posts.map((post) => (
                 <div key={post.id_post} className="post-card">
 
-                  <Link to={`/post/${post.id_post}`} className="post-header">
+                  {/* ⚡ Aquí se corrigió la ruta */}
+                  <Link to={`/main-layout/post-detail/${post.id_post}`} className="post-header">
                     <div className="post-main-info">
                       <h3 className="post-title">Título: {post.titulo}</h3>
                       <p className="post-preview">{post.contenido}</p>
