@@ -1,0 +1,12 @@
+Email	prueba.new@foro.com
+Contraseña	testuser
+
+admin@admin.com
+admin123
+
+
+otromail@gmail.com
+baltazar
+
+algunmail@arca.com
+admin123
